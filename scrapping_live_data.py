@@ -41,7 +41,8 @@ FIELDNAMES = [
   "token_price_change_h24", 
   "token_price_change_h6",
   "token_price_change_h1", 
-  "token_price_change_m5"
+  "token_price_change_m5",
+  "information_extracted_at"
 ]
 
 async def dexscreener_scraper():
@@ -65,7 +66,8 @@ async def dexscreener_scraper():
      for i in range(1,15): 
       DATA = []
       url =f"wss://io.dexscreener.com/dex/screener/pairs/h24/{i}?rankBy[key]=pairAge&rankBy[order]=asc&rankBy[chainIds]=solana&rankBy[minMarketCap]=40000&rankBy[minLiq]=1000"   
-      async with websockets.connect(url, extra_headers=headers) as websocket:
+      try:
+       async with websockets.connect(url, extra_headers=headers) as websocket:
        
         message_raw = await websocket.recv()
         message = json.loads(message_raw)
@@ -106,14 +108,14 @@ async def dexscreener_scraper():
                 token_market_cap = pair["marketCap"]
             else :   
                token_market_cap = 0   
-            """""
+           
             token_created_at_raw = pair["pairCreatedAt"]
             token_created_at = token_created_at_raw / 1000
             token_created_at = datetime.utcfromtimestamp(token_created_at)
 
             now_utc = datetime.utcnow()
             token_created_since = round((now_utc - token_created_at).total_seconds() / 60, 2)
-            """
+            
             token_eti = pair.get("ear", False)
             token_header = pair.get("profile", {}).get("header", False)
             token_website = pair.get("profile", {}).get("website", False)
@@ -128,7 +130,7 @@ async def dexscreener_scraper():
             token_price_change_h6 = pair["priceChange"]["h6"]
             token_price_change_h1 = pair["priceChange"]["h1"]
             token_price_change_m5 = pair["priceChange"]["m5"]
-
+            information_extracted_at= datetime.now()
             VALUES = [
               chain_id, 
               dex_id, 
@@ -143,8 +145,8 @@ async def dexscreener_scraper():
               token_h1_to_m5_buys, 
               token_liquidity, 
               token_market_cap, 
-              #token_created_at, 
-              #token_created_since, 
+              token_created_at, 
+              token_created_since, 
               token_eti,
               token_header, 
               token_website,
@@ -155,7 +157,8 @@ async def dexscreener_scraper():
               token_price_change_h24, 
               token_price_change_h6, 
               token_price_change_h1, 
-              token_price_change_m5
+              token_price_change_m5,
+              information_extracted_at
             ]
 
             
@@ -174,7 +177,12 @@ async def dexscreener_scraper():
                 if f.tell() == 0:
                     writer.writeheader() 
                 writer.writerow(row)
-             
+      except TimeoutError:
+                print("Connection timed out. Retrying...")
+                continue
+      except Exception as e:
+                print(f"An error occurred: {e}")
+                continue         
      print('pause 2min :°')
      time.sleep(120)     
     
