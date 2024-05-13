@@ -63,7 +63,7 @@ async def dexscreener_scraper():
     list_token={}
     while True:    
      
-     for i in range(1,15): 
+     for i in range(1,24): 
       DATA = []
       url =f"wss://io.dexscreener.com/dex/screener/pairs/h24/{i}?rankBy[key]=pairAge&rankBy[order]=asc&rankBy[chainIds]=solana&rankBy[minMarketCap]=40000&rankBy[minLiq]=1000"   
       try:
