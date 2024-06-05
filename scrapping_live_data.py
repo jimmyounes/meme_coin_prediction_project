@@ -171,7 +171,7 @@ async def dexscreener_scraper():
                 DATA.append(row)
 
           for row in DATA : 
-            filename = './database/dexscreener_%s.csv' % row['token_address']
+            filename = './live_data/dexscreener_%s.csv' % row['token_address']
             with open(filename, 'a',encoding='utf-8', newline='') as f: 
                 writer = csv.DictWriter(f, fieldnames=FIELDNAMES, delimiter='\t')
                 if f.tell() == 0:
